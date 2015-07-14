@@ -8,6 +8,8 @@ from operator import itemgetter, methodcaller
 from bika.lims import bikaMessageFactory as _
 from bika.lims.browser import BrowserView
 from bika.lims.utils import t
+from plone.app.layout.viewlets.common import ViewletBase
+from zope.component import getMultiAdapter
 
 class View(BrowserView):
 
@@ -129,3 +131,17 @@ class PrintView(View):
 
     def __call__(self):
         return View.__call__(self)
+
+
+class OrderPathBarViewlet(ViewletBase):
+    """Viewlet for overriding breadcrumbs in Order View"""
+
+    index = ViewPageTemplateFile('templates/path_bar.pt')
+
+    def update(self):
+        super(OrderPathBarViewlet, self).update()
+        self.is_rtl = self.portal_state.is_rtl()
+        breadcrumbs = getMultiAdapter((self.context, self.request),
+                                      name='breadcrumbs_view').breadcrumbs()
+        breadcrumbs[2]['absolute_url'] += '/orders'
+        self.breadcrumbs = breadcrumbs
