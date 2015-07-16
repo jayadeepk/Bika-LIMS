@@ -41,6 +41,18 @@ class Sticker(BrowserView):
                 new_items.append(i)
         self.items = new_items
 
+        # Orders get stickers for their product items
+        new_items = []
+        for i in self.items:
+            if i.portal_type == 'Order':
+                bsc = getToolByName(self.context, 'bika_setup_catalog')
+                catalog = bsc(portal_type='ProductItem')
+                new_items += [pi.getObject() for pi in catalog
+                              if pi.getObject().getOrderId() == i.getId()]
+            else:
+                new_items.append(i)
+        self.items = new_items
+
         if not self.items:
             logger.warning("Cannot print stickers: no items specified in request")
             self.request.response.redirect(self.context.absolute_url())
@@ -56,3 +68,10 @@ class Sticker(BrowserView):
 
         elif self.items[0].portal_type == 'ReferenceSample':
             return self.referencesample_sticker()
+
+        elif self.items[0].portal_type == 'ProductItem':
+            template = self.request.get('template', '')
+            prefix, tmpl = template.split(':')
+            templates_dir = queryResourceDirectory('stickers', prefix).directory
+            stickertemplate = ViewPageTemplateFile(os.path.join(templates_dir, tmpl))
+            return stickertemplate(self)
