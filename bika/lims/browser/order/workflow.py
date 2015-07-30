@@ -57,3 +57,13 @@ class OrderWorkflowAction(WorkflowAction):
             return
         # Order publish preview
         self.request.response.redirect(self.context.absolute_url() + "/publish")
+
+    def workflow_action_receive(self):
+        action, came_from = WorkflowAction._get_form_workflow_action(self)
+        if not isActive(self.context):
+            message = _('Item is inactive.')
+            self.context.plone_utils.addPortalMessage(message, 'info')
+            self.request.response.redirect(self.context.absolute_url())
+            return
+        # Generate labels of product items
+        self.request.response.redirect(self.context.absolute_url() + "/order-sticker")
