@@ -104,6 +104,11 @@ schema = BikaSchema.copy() + Schema((
             label=_("Location"),
         )
     ),
+    FixedPointField('Volume',
+        widget = DecimalWidget(
+            label=_("Volume"),
+        ),
+    ),
 ))
 
 schema['title'].required = False

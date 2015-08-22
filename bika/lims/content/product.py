@@ -59,10 +59,16 @@ schema = BikaSchema.copy() + Schema((
                           "storage. eg. 15, 100"),
         ),
     ),
+    FixedPointField('Volume',
+        widget = DecimalWidget(
+            label=_("Volume"),
+            description=_("Volume of product in each product item"),
+        ),
+    ),
     StringField('Unit',
         widget = StringWidget(
             label=_("Unit"),
-            description=_(" Unit for the quantity eg. ml or kg"),
+            description=_("Unit for the volume, eg. ml or kg"),
         ),
     ),
     StringField('Toxicity',
@@ -149,7 +155,7 @@ class Product(BaseContent):
     security = ClassSecurityInfo()
     implements(IProduct)
     schema = schema
-    
+
     _at_rename_after_creation = True
 
     def _renameAfterCreation(self, check_auto_id=False):
