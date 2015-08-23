@@ -10,8 +10,11 @@ from bika.lims import config
 from bika.lims.content.bikaschema import BikaSchema
 from DateTime.DateTime import DateTime
 from decimal import Decimal
+from operator import itemgetter
 from Products.Archetypes.public import *
 from Products.Archetypes.references import HoldingReference
+import json
+import plone.protect
 import sys
 
 schema = BikaSchema.copy() + Schema((
@@ -202,3 +205,49 @@ class Product(BaseContent):
         return self.aq_parent.Title()
 
 registerType(Product, config.PROJECTNAME)
+
+
+class ajaxGetProducts:
+    """
+    Products list used for fuzzy finder in Analysis Service
+    """
+
+    catalog_name='bika_setup_catalog'
+    contentFilter = {'portal_type': 'Product',
+                     'inactive_state': 'active'}
+
+    def __init__(self, context, request):
+        self.context = context
+        self.request = request
+
+    def __call__(self):
+
+        plone.protect.CheckAuthenticator(self.request)
+        searchTerm = 'searchTerm' in self.request and self.request[
+            'searchTerm'].lower() or ''
+        page = self.request['page']
+        nr_rows = self.request['rows']
+        sord = self.request['sord']
+        sidx = self.request['sidx']
+        rows = []
+
+        # lookup objects from ZODB
+        catalog = getToolByName(self.context, self.catalog_name)
+        brains = catalog(self.contentFilter)
+        brains = searchTerm and \
+            [p for p in brains if p.Title.lower().find(searchTerm) > -1] \
+            or brains
+
+        rows = [{'Product': p.Title,
+                 'Category': p.getObject().getCategoryTitle()}
+                for p in brains]
+
+        rows = sorted(rows, cmp=lambda x, y: cmp(x.lower(
+        ), y.lower()), key=itemgetter(sidx and sidx or 'Product'))
+        pages = len(rows) / int(nr_rows)
+        pages += divmod(len(rows), int(nr_rows))[1] and 1 or 0
+        ret = {'page': page,
+               'total': pages,
+               'records': len(rows),
+               'rows': rows[(int(page) - 1) * int(nr_rows): int(page) * int(nr_rows)]}
+        return json.dumps(ret)

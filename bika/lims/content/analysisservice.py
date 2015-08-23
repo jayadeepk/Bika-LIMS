@@ -914,6 +914,40 @@ schema = BikaSchema.copy() + Schema((
             description=_("The service's analytical protocol ID")
         ),
     ),
+    # Products selection for analysis
+    RecordsField('Products',
+        schemata="Products",
+        type='Product',
+        subfields=('Product',),
+        subfield_sizes={'Product': 35},
+        subfield_labels={'Product': _('')},
+        widget=RecordsWidget(
+            label = _("Products"),
+            description=_(
+                "List of products to be used in this analysis service. Based "
+                "on this list, items of these products will be shown in "
+                "analysis request during results capture."),
+            combogrid_options={
+                'Product': {
+                    'colModel': [{
+                            'columnName': 'Product',
+                            'label':_('Title'),
+                            'align': 'left',
+                            'width': '30',
+                        }, {
+                            'columnName': 'Category',
+                            'label':_('Category'),
+                            'align': 'left',
+                            'width': '70',
+                        },
+                    ],
+                    'showOn': True,
+                    'width': '550px',
+                    'url': 'getproducts',
+                }
+            }
+        )
+    )
 ))
 
 schema['id'].widget.visible = False
